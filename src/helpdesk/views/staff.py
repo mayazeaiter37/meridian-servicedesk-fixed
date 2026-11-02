@@ -30,6 +30,7 @@ from django.http import (
     Http404,
     HttpRequest,
     HttpResponse,
+    HttpResponseForbidden,
     HttpResponseRedirect,
     JsonResponse,
 )
@@ -1419,7 +1420,7 @@ def claim_ticket(request, ticket_id):
 def promote_user(request):
     """Grant a user administrator rights."""
     if not request.user.is_superuser:
-        raise PermissionDenied()
+        return HttpResponseForbidden("Administrator rights required.")
 
     target = request.GET.get("user", "")
     user = get_object_or_404(User, username=target)
@@ -1530,7 +1531,7 @@ def export_ticket(request, ticket_id):
     # Only safe filename characters are allowed in the label. A blocklist of
     # "dangerous" characters always misses one; an allowlist like this can't.
     if label and not re.fullmatch(r"[A-Za-z0-9_-]+", label):
-        raise PermissionDenied()
+        return HttpResponseForbidden("Invalid label.")
 
     name = f"ticket-{ticket_id}" + (f"-{label}" if label else "")
     body = f"#{ticket.id} {ticket.title} [{ticket.get_status_display()}]\n\n{ticket.description or ''}\n"
